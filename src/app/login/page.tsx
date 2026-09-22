@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { devLogin } from "./actions";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -80,6 +81,32 @@ export default function LoginPage() {
               {status === "sending" ? "Sende Link…" : "Login-Link anfordern"}
             </button>
           </form>
+        )}
+
+        {process.env.NODE_ENV !== "production" && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <p className="mb-2 text-center text-xs text-slate-400">
+              Nur lokal (Dev): ohne E-Mail einloggen
+            </p>
+            <div className="flex gap-2">
+              <form action={() => devLogin("employee")} className="flex-1">
+                <button
+                  type="submit"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Als Mitarbeiter:in
+                </button>
+              </form>
+              <form action={() => devLogin("admin")} className="flex-1">
+                <button
+                  type="submit"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Als Admin
+                </button>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     </main>
