@@ -10,6 +10,7 @@ async function requireAdmin() {
   if (!session?.profile || session.profile.role !== "admin") {
     throw new Error("Nur Admins duerfen den Dienstplan bearbeiten.");
   }
+  return session.profile;
 }
 
 export async function updateSettings(formData: FormData) {
@@ -85,4 +86,36 @@ export async function deleteSlot(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/filiale");
   revalidatePath("/meine-woche");
+}
+
+export async function setZeiterfassungVereinbarung(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const profileId = String(formData.get("profile_id"));
+  const vereinbarung = formData.get("zeiterfassung_vereinbarung") === "on";
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ zeiterfassung_vereinbarung: vereinbarung })
+    .eq("id", profileId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+}
+
+export async function monatAbschliessen(formData: FormData) {
+  const admin = await requireAdmin();
+  const supabase = await createClient();
+
+  const jahr = Number(formData.get("jahr"));
+  const monat = Number(formData.get("monat"));
+
+  const { error } = await supabase
+    .from("monatsabschluesse")
+    .insert({ jahr, monat, gesperrt_von: admin.id });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+  revalidatePath("/zeiterfassung");
 }

@@ -10,7 +10,14 @@ import {
 } from "@/lib/dienstplan";
 import { ABTEILUNG_LABEL, WOCHENTAGE } from "@/lib/constants";
 import type { SlotAbteilungTyp } from "@/lib/supabase/types";
-import { createSlot, deleteSlot, updateSettings, updateSlot } from "./actions";
+import {
+  createSlot,
+  deleteSlot,
+  monatAbschliessen,
+  setZeiterfassungVereinbarung,
+  updateSettings,
+  updateSlot,
+} from "./actions";
 
 const ABTEILUNG_OPTIONEN = Object.keys(ABTEILUNG_LABEL) as SlotAbteilungTyp[];
 
@@ -96,6 +103,8 @@ export default async function AdminPage({
           </button>
         </form>
       </section>
+
+      <ZeiterfassungAdmin profile={profile} />
 
       <section className="space-y-3">
         <div className="flex gap-2">
@@ -332,5 +341,83 @@ function HalbtagBearbeiten({
         </details>
       )}
     </div>
+  );
+}
+
+const MONATSNAMEN = [
+  "Januar", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+];
+
+function ZeiterfassungAdmin({
+  profile,
+}: {
+  profile: Awaited<ReturnType<typeof getAlleAktivenProfile>>;
+}) {
+  const heute = new Date();
+  const jahr = heute.getFullYear();
+  const monat = heute.getMonth() + 1;
+  const vorMonat = monat === 1 ? { jahr: jahr - 1, monat: 12 } : { jahr, monat: monat - 1 };
+
+  return (
+    <section className="rounded-xl border border-slate-200 bg-white p-4">
+      <h2 className="mb-3 text-sm font-semibold text-slate-900">Zeiterfassung</h2>
+
+      <div className="mb-4 space-y-2">
+        <p className="text-xs font-medium text-slate-500">
+          Freigeschaltet (nach unterzeichneter Vereinbarung)
+        </p>
+        {profile.map((p) => (
+          <form
+            key={p.id}
+            action={setZeiterfassungVereinbarung}
+            className="flex items-center justify-between gap-2 border-t border-slate-100 py-1.5 first:border-t-0"
+          >
+            <input type="hidden" name="profile_id" value={p.id} />
+            <span className="text-sm text-slate-700">{p.name}</span>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-xs text-slate-500">
+                <input
+                  type="checkbox"
+                  name="zeiterfassung_vereinbarung"
+                  defaultChecked={p.zeiterfassung_vereinbarung}
+                  className="h-4 w-4"
+                />
+                aktiv
+              </label>
+              <button
+                type="submit"
+                className="rounded-lg border border-slate-300 px-2 py-1 text-[11px] font-medium text-slate-600"
+              >
+                Speichern
+              </button>
+            </div>
+          </form>
+        ))}
+      </div>
+
+      <div className="space-y-2 border-t border-slate-100 pt-3">
+        <p className="text-xs font-medium text-slate-500">Monat abschließen</p>
+        <form action={monatAbschliessen} className="flex items-center gap-2">
+          <input type="hidden" name="jahr" value={vorMonat.jahr} />
+          <input type="hidden" name="monat" value={vorMonat.monat} />
+          <span className="flex-1 text-sm text-slate-700">
+            {MONATSNAMEN[vorMonat.monat - 1]} {vorMonat.jahr}
+          </span>
+          <button
+            type="submit"
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white"
+          >
+            Abschließen &amp; sperren
+          </button>
+        </form>
+        <a
+          href={`/admin/export?jahr=${vorMonat.jahr}&monat=${vorMonat.monat}`}
+          className="inline-block text-xs font-medium text-slate-500 underline underline-offset-2"
+        >
+          CSV-Export {MONATSNAMEN[vorMonat.monat - 1]} {vorMonat.jahr} (Lohnverrechnung)
+        </a>
+      </div>
+    </section>
   );
 }

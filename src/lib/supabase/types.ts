@@ -14,7 +14,28 @@ export type ProfileRow = {
   soll_stunden_woche: number;
   abteilung: AbteilungTyp;
   aktiv: boolean;
+  zeiterfassung_vereinbarung: boolean;
   created_at: string;
+};
+
+export type ZeitEintragRow = {
+  id: string;
+  profile_id: string;
+  datum: string;
+  plan_slot_id: string | null;
+  geplante_stunden: number;
+  ist_stunden: number;
+  grund: string | null;
+  erstellt_von: string;
+  erstellt_am: string;
+  aktualisiert_am: string;
+};
+
+export type MonatsabschlussRow = {
+  jahr: number;
+  monat: number;
+  gesperrt_am: string;
+  gesperrt_von: string;
 };
 
 export type PlanSlotRow = {
@@ -74,6 +95,36 @@ export type Database = {
           zyklus_start: string;
         };
         Update: Partial<DienstplanSettingsRow>;
+        Relationships: [];
+      };
+      zeit_eintraege: {
+        Row: ZeitEintragRow;
+        Insert: Partial<ZeitEintragRow> & {
+          profile_id: string;
+          datum: string;
+          geplante_stunden: number;
+          ist_stunden: number;
+          erstellt_von: string;
+        };
+        Update: Partial<ZeitEintragRow>;
+        Relationships: [
+          {
+            foreignKeyName: "zeit_eintraege_plan_slot_id_fkey";
+            columns: ["plan_slot_id"];
+            isOneToOne: false;
+            referencedRelation: "plan_slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      monatsabschluesse: {
+        Row: MonatsabschlussRow;
+        Insert: Partial<MonatsabschlussRow> & {
+          jahr: number;
+          monat: number;
+          gesperrt_von: string;
+        };
+        Update: Partial<MonatsabschlussRow>;
         Relationships: [];
       };
     };

@@ -21,6 +21,7 @@ export default async function AppLayout({
   const tabs = [
     { href: "/filiale", label: "Filiale" },
     { href: "/meine-woche", label: "Meine Woche" },
+    { href: "/zeiterfassung", label: "Zeiterfassung" },
     ...(isAdmin ? [{ href: "/admin", label: "Bearbeiten" }] : []),
   ];
 

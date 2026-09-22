@@ -50,8 +50,16 @@ Seed-Daten: `dienstplan-seed.json` (Variante A und B, Soll-Stunden, Samstags-Rad
 - `.env.example` pflegen, keine Secrets committen
 - Design/Optik orientiert sich an der bereits gebauten HTML-Vorschau (Farben, Typografie, Tab-Navigation)
 
+## Zeiterfassung (Phase 2 — Umsetzung gestartet)
+Abweichungs-Aufzeichnung statt Vollerfassung/Stempeluhr (§ 26 AZG, bei fixem Dienstplan zulässig): pro geplantem Slot werden Ist-Stunden erfasst, die im Normalfall den geplanten Stunden entsprechen; nur bei Abweichung ist ein Grund verpflichtend.
+- `profiles.zeiterfassung_vereinbarung` (boolean): Schreibzugriff auf Zeiterfassung erst nach dokumentierter Vereinbarung pro Person; Admin setzt das Flag.
+- `zeit_eintraege`: profile_id, datum (echtes Kalenderdatum, nicht Zyklus-Woche), plan_slot_id (nullable), geplante_stunden (Snapshot), ist_stunden, grund (Pflicht bei Abweichung), erstellt_von/erstellt_am, aktualisiert_am.
+- `zeit_eintraege_audit`: Trigger-basiertes Audit-Log (insert/update/delete, alte/neue Daten, wer, wann) — Einträge selbst sind über die UI nicht löschbar.
+- `monatsabschluesse` (jahr, monat, gesperrt_am, gesperrt_von): gesperrte Monate sind per Trigger für Insert/Update blockiert (auch für Admin — Wiedereröffnung bewusst nicht gebaut, wäre eigener Schritt).
+- UI: neuer Tab „Zeiterfassung“ für alle (eigene Woche, editierbar solange Monat offen); Admin zusätzlich Monat abschließen + CSV-Export (Lohnverrechnung).
+- PDF-Export (Mitarbeiter:innen-Selbstauskunft) bewusst zurückgestellt — CSV deckt den Kernbedarf, PDF folgt als eigener Schritt bei Bedarf.
+
 ## Später (bewusst nicht in V1, aber Datenmodell so anlegen, dass es andockbar bleibt)
-- **Zeiterfassung:** Stempeln, Abweichungen/Nachträge mit Begründungspflicht, Audit-Log pro Änderung, Monatsabschluss + Sperre, PDF/CSV-Export für Lohnverrechnung und für Mitarbeiter:innen-Selbstauskunft. Rechtlicher Hintergrund (§ 26 AZG) bereits geklärt: eigene Aufzeichnung ist zulässig, braucht aber eine Vereinbarung pro Person, Anleitung/Kontrolle durch den Arbeitgeber und – bei fixem Dienstplan – nur eine Abweichungs-Aufzeichnung statt Vollerfassung.
 - **Urlaubs-/Abwesenheitsanträge:** Antrag mit Zeitraum + Typ, Admin bekommt Benachrichtigung, genehmigt/lehnt ab, Status für Mitarbeiter:in einsehbar. Braucht eine `absences`-Tabelle plus `notifications`.
 - **Anonymes Feedback:** Freitextfeld ohne Personenbezug (keine user_id/IP, nur Datum), Insert über Server-Route mit Service-Role, RLS nur für Admin lesbar. Bei 6 Personen bleibt Inhalt potenziell zuordenbar — technisch nicht lösbar, nur als Hinweis in der UI.
 
