@@ -4,7 +4,10 @@ export type SlotAbteilungTyp = "sport" | "schuh" | "admin" | "digital" | "backof
 export type HalbtagTyp = "vm" | "nm";
 export type PlanVarianteTyp = "A" | "B";
 
-export interface ProfileRow {
+// Als `type` statt `interface` deklariert: @supabase/postgrest-js's generische
+// Insert/Update-Typaufloesung (Relation extends { Insert: unknown } ? ... : never)
+// schlaegt bei `interface`-Referenzen fehl und kollabiert sonst zu `never`.
+export type ProfileRow = {
   id: string;
   name: string;
   role: UserRole;
@@ -12,9 +15,9 @@ export interface ProfileRow {
   abteilung: AbteilungTyp;
   aktiv: boolean;
   created_at: string;
-}
+};
 
-export interface PlanSlotRow {
+export type PlanSlotRow = {
   id: string;
   variante: PlanVarianteTyp;
   zyklus_woche: number;
@@ -25,22 +28,23 @@ export interface PlanSlotRow {
   abteilung_an_diesem_slot: SlotAbteilungTyp;
   pause_min: number;
   created_at: string;
-}
+};
 
-export interface DienstplanSettingsRow {
+export type DienstplanSettingsRow = {
   id: number;
   zyklus_start: string;
   aktive_variante: PlanVarianteTyp;
   updated_at: string;
-}
+};
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
         Row: ProfileRow;
         Insert: Partial<ProfileRow> & { id: string; name: string };
         Update: Partial<ProfileRow>;
+        Relationships: [];
       };
       plan_slots: {
         Row: PlanSlotRow;
@@ -54,6 +58,15 @@ export interface Database {
           abteilung_an_diesem_slot: SlotAbteilungTyp;
         };
         Update: Partial<PlanSlotRow>;
+        Relationships: [
+          {
+            foreignKeyName: "plan_slots_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       dienstplan_settings: {
         Row: DienstplanSettingsRow;
@@ -61,7 +74,10 @@ export interface Database {
           zyklus_start: string;
         };
         Update: Partial<DienstplanSettingsRow>;
+        Relationships: [];
       };
     };
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
   };
-}
+};

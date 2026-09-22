@@ -78,6 +78,38 @@ export async function getPlanSlotsForWeek(
   return (data ?? []) as unknown as FilialeSlot[];
 }
 
+export interface AdminSlot {
+  id: string;
+  wochentag: number;
+  halbtag: "vm" | "nm";
+  stunden: number;
+  pause_min: number;
+  abteilung_an_diesem_slot: SlotAbteilungTyp;
+  profile: Pick<ProfileRow, "id" | "name" | "abteilung">;
+}
+
+export async function getPlanSlotsForWeekAdmin(
+  variante: PlanVarianteTyp,
+  zyklusWoche: number
+): Promise<AdminSlot[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plan_slots")
+    .select(
+      "id, wochentag, halbtag, stunden, pause_min, abteilung_an_diesem_slot, profile:profiles(id, name, abteilung)"
+    )
+    .eq("variante", variante)
+    .eq("zyklus_woche", zyklusWoche)
+    .order("wochentag")
+    .order("halbtag");
+
+  if (error) {
+    throw new Error(`Dienstplan konnte nicht geladen werden: ${error.message}`);
+  }
+
+  return (data ?? []) as unknown as AdminSlot[];
+}
+
 export interface EigenerSlot {
   zyklus_woche: number;
   wochentag: number;
